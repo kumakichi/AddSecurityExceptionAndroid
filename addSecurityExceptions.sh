@@ -1,4 +1,5 @@
 #!/bin/bash
+minSdkVer="" # if you wanna patch minSdkVersion, just set minSdkVer
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 if [ $# -eq 0 ]
@@ -39,6 +40,12 @@ fi
 cp "$DIR/network_security_config.xml" $tmpDir/res/xml/.
 if ! grep -q "networkSecurityConfig" $tmpDir/AndroidManifest.xml; then
   sed -E "s/(<application.*)(>)/\1 android\:networkSecurityConfig=\"@xml\/network_security_config\" \2 /" $tmpDir/AndroidManifest.xml > $tmpDir/AndroidManifest.xml.new
+  if [ "${minSdkVer}" != "" ]
+  then
+    echo "patching minsdk..."
+    sed -E 's/(.*minSdkVersion=")([0-9]+)(.*)/\1'${minSdkVer}'\3/g' $tmpDir/AndroidManifest.xml > $tmpDir/AndroidManifest.xml.new
+    sed -E 's/(.*<manifest.*)(>)/\1\2\n    <uses-sdk android:minSdkVersion="'${minSdkVer}'"\/>/g' $tmpDir/AndroidManifest.xml > $tmpDir/AndroidManifest.xml.new
+  fi
   mv $tmpDir/AndroidManifest.xml.new $tmpDir/AndroidManifest.xml
 fi
 
